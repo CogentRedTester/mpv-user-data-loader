@@ -27,14 +27,25 @@ local function is_equal(a,b)
     return utils.to_string(a) == utils.to_string(b)
 end
 
+-- parse trailing options from script-opts
+local function parse_value_opts(trail)
+    local opts = { restore = 'copy' } -- defaults
+
+    for key, value in string.gmatch(trail, '([%w_%-]+)%s*=%s*([%w_%-]+)') do
+        opts[key] = value
+    end
+
+    return opts
+end
+
 -- Sets a field of the user-data property.
 -- Appends `user-data/` to `key` and passes value through natively.
-local function set_value_native(key, ud_value)
+local function set_value_native(key, ud_value, ...)
     local ud_key = 'user-data/'..key
     local prev_val = mp.get_property_native(ud_key)
 
     if not is_equal(prev_val, ud_key) then
-        msg.verbose('setting', ud_key, utils.to_string(ud_value))
+        msg.verbose('setting', ud_key, utils.to_string(ud_value), ...)
         mp.set_property_native(ud_key, ud_value)
     end
 
@@ -56,8 +67,10 @@ local function set_value(key, value)
         return false
     end
 
-    local success, vars = set_value_native(key, ud_value)
-    if vars then vars.trail = trail end
+    local opts = parse_value_opts(trail)
+    local success, vars = set_value_native(key, ud_value, utils.to_string(opts))
+    vars.trail = trail
+    vars.opts = opts
     return success, vars
 end
 
