@@ -16,8 +16,10 @@ local mp = require 'mp'
 local msg = require 'mp.msg'
 local utils = require 'mp.utils'
 
+-- A map that stores all the currently applied script-opts.
+-- The key is the user-data path of the field, and the value is
+-- the result of the set_value call that modified the field.
 local overrides = {}
-local prev_values = {}
 
 local config_path = mp.command_native({'expand-path', '~~/script-opts/user-data.conf'})
 local json_config_file = mp.command_native({'expand-path', '~~/script-opts/user-data.json'})
@@ -125,11 +127,11 @@ local function setup_json()
 end
 
 -- detects changes to the script-opts property that requires `user-data` updates
-local function main(_, opts)
+local function main(_, script_opts)
     local current_overrides = {}
 
     -- Finds any user-data value overrides in `script-opts`.
-    for key, value in pairs(opts) do
+    for key, value in pairs(script_opts) do
         if string.find(key, '^user%-data/.') then
             local succeeds, vars = set_value(string.match(key, '^user%-data/(.+)') or '', value)
 
@@ -137,8 +139,7 @@ local function main(_, opts)
                 current_overrides[vars.key] = true
 
                 if not overrides[vars.key] then
-                    overrides[vars.key] = true
-                    prev_values[vars.key] = vars.prev_value
+                    overrides[vars.key] = vars
                 end
             end
         end
@@ -146,9 +147,9 @@ local function main(_, opts)
 
     -- If any values have been removed from script-opts we want to reset them to the original values.
     -- This is to add synergy with conditional auto profiles.
-    for key in pairs(overrides) do
+    for key, vars in pairs(overrides) do
         if not current_overrides[key] then
-            local prev_value = prev_values[key]
+            local prev_value = vars.prev_value
             if prev_value then
                 msg.verbose('setting', key, utils.to_string(prev_value))
                 mp.set_property_native(key, prev_value)
@@ -157,7 +158,6 @@ local function main(_, opts)
                 mp.del_property(key)
             end
             overrides[key] = nil
-            prev_values[key] = nil
         end
     end
 end
