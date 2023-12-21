@@ -179,6 +179,21 @@ profile-cond=display_names[1] ~= 'DP-1'
 script-opts-remove=user-data/primary-monitor
 ```
 
+Uses user-data property expansion to append `PRIMARY MONITOR` to the
+title of the mpv window:
+
+```properties
+title='${?media-title:${media-title}}${!media-title:No file} - mpv${?user-data/primary-monitor: - PRIMARY MONITOR}'
+
+[PrimaryMonitor]
+profile-cond=display_names[1] == 'DP-1'
+script-opts-append=user-data/primary-monitor=true|restore=copy-equal
+
+[OtherMonitor]
+profile-cond=display_names[1] ~= 'DP-1'
+script-opts-remove=user-data/primary-monitor
+```
+
 #### Commandline
 
 ```bash
