@@ -42,12 +42,12 @@ end
 
 -- Sets a field of the user-data property.
 -- Appends `user-data/` to `key` and passes value through natively.
-local function set_value_native(key, ud_value, ...)
+local function set_value_native(key, ud_value)
     local ud_key = 'user-data/'..key
     local prev_val = mp.get_property_native(ud_key)
 
     if not is_equal(prev_val, ud_key) then
-        msg.verbose('setting', ud_key, utils.to_string(ud_value), ...)
+        msg.verbose('setting', ud_key, utils.to_string(ud_value))
         mp.set_property_native(ud_key, ud_value)
     end
 
@@ -69,10 +69,9 @@ local function set_value(key, value)
         return false
     end
 
-    local opts = parse_value_opts(trail)
-    local success, vars = set_value_native(key, ud_value, utils.to_string(opts))
+    local success, vars = set_value_native(key, ud_value)
     vars.trail = trail
-    vars.opts = opts
+    vars.opts = parse_value_opts(trail)
     return success, vars
 end
 
@@ -99,6 +98,29 @@ local function setup_config()
     end
 
     file:close()
+end
+
+-- restores the user-data for the given key using the override parameters
+local function restore(key, override)
+    msg.verbose('restoring', key)
+    local prev_value = override.prev_value
+    local restore_opt = override.opts.restore
+
+    if restore_opt == 'no' then return end
+    if restore_opt == 'copy-equal' and not is_equal(override.value, mp.get_property_native(key)) then
+        msg.verbose(key, 'not equal to original value', utils.to_string(override.value), '- not restoring')
+        return
+    end
+
+    if restore_opt == 'copy-equal' or restore_opt == 'copy' then
+        if prev_value ~= nil then
+            msg.verbose('setting', key, utils.to_string(prev_value))
+            mp.set_property_native(key, prev_value)
+        else
+            msg.verbose('deleting', key)
+            mp.del_property(key)
+        end
+    end
 end
 
 -- loading values from user-data.json
@@ -138,7 +160,9 @@ local function main(_, script_opts)
             if succeeds and vars then
                 current_overrides[vars.key] = true
 
-                if not overrides[vars.key] then
+                msg.debug('script-opt values:', utils.to_string(vars))
+                if not overrides[vars.key] and vars.opts.restore ~= 'no' then
+                    msg.debug('setting override')
                     overrides[vars.key] = vars
                 end
             end
@@ -149,14 +173,7 @@ local function main(_, script_opts)
     -- This is to add synergy with conditional auto profiles.
     for key, vars in pairs(overrides) do
         if not current_overrides[key] then
-            local prev_value = vars.prev_value
-            if prev_value then
-                msg.verbose('setting', key, utils.to_string(prev_value))
-                mp.set_property_native(key, prev_value)
-            else
-                msg.verbose('deleting', key)
-                mp.del_property(key)
-            end
+            restore(key, vars)
             overrides[key] = nil
         end
     end

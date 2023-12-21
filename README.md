@@ -89,20 +89,56 @@ Values set with script-opts always overwrite the config files.
 ## Changing Properties at Runtime
 `user-data` fields can be modified at runtime using
 [`script-opts`](https://mpv.io/manual/master/#options-script-opts).
-This allows thew fields to be set from the commandline, from
+This allows the fields to be set from the commandline, from
 `mpv.conf`, and from profiles, including
 [conditional auto profiles](https://mpv.io/manual/master/#conditional-auto-profiles).
 
-The script-opt is in the form `user-data/path/to/field=<JSON value>`.
+The script-opt is in the form `user-data/path/to/field=<JSON value><parameters>`.
 It is nearly identical to the `user-data.conf` syntax, except that
-the keys must be prefixed with `user-data/`.
+the keys must be prefixed with `user-data/` and a list of parameters can optionally
+be appended to the end (see [script-opt parameters](#script-opt-parameters)).
 
 If a `script-opt` is removed, then the associated `user-data` field is
 reset to the value it had when the first script-opt was applied.
-This nearly equivalent to the behaviour of
-[`profile-restore=copy`](https://mpv.io/manual/master/#runtime-profiles).
-An option to use `profile-restore=copy-equal` behaviour may be added
-in the future.
+This behaviour can be changed with the [`restore` parameter](#restore).
+
+<!-- An option to use `profile-restore=copy-equal` behaviour may be added
+in the future. -->
+
+### script-opt parameters
+Parameters are a list of optional key-value pairs appended after the
+JSON value in the form `<key>=<value>`. Whitespace around the `=` is allowed and
+parameters can be separated from the JSON value (and each other) using any
+character **except** the following: `a-zA-Z0-9_-`.
+
+Here are some examples with valid syntax:
+
+```properties
+script-opts-append=user-data/script_name/visibility=true|param=val|param2=val
+script-opts-append=user-data/script2/num=21: param = val param2=val
+script-opts-append=user-data/script2/text/header="header text" param = val
+```
+
+Currently there is only one parameter, `restore`, which
+behaves similarly to the mpv
+[`profile-restore`](https://mpv.io/manual/master/#runtime-profiles)
+option.
+
+#### `restore`
+This parameter controls what happens when the script-opt is removed.
+There are three options:
+
+option       | description
+-------------|-------------------------------------------------------------------------------------------------------
+`copy`       | Copy the original value of the field and restore it when the script-opt is removed (default).
+`copy-equal` | Copy the original value, but only restore if the current field value is equal to the value set by the script-opt.
+`no`         | Do not do anything when the script-opt is removed.
+
+Currently, if a script-opt is changed instead of removed,
+then only the `restore` value of the original script-opt is
+considered (unless that original value was `no`).
+This may change in the future.
+
 
 ### Examples
 
