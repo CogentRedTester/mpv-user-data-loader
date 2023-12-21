@@ -46,7 +46,7 @@ local function set_value_native(key, ud_value)
     local ud_key = 'user-data/'..key
     local prev_val = mp.get_property_native(ud_key)
 
-    if not is_equal(prev_val, ud_key) then
+    if not is_equal(prev_val, ud_value) then
         msg.verbose('setting', ud_key, utils.to_string(ud_value))
         mp.set_property_native(ud_key, ud_value)
     end
