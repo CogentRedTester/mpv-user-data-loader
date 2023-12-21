@@ -28,28 +28,6 @@ local function is_equal(a,b)
 end
 
 -- Sets a field of the user-data property.
--- Appends `user-data/` to `key` and parses `value` as a json string.
-local function set_value(key, value)
-    local ud_key = 'user-data/'..key
-    local ud_value, err = utils.parse_json(value)
-
-    local prev_val = mp.get_property_native(ud_key)
-
-    if (err) then
-        msg.error(err)
-        msg.warn('failed to parse user-data JSON string:', value)
-        return false, ud_key, ud_value, prev_val
-    end
-
-    if not is_equal(prev_val, ud_key) then
-        msg.verbose('setting', ud_key, utils.to_string(ud_value))
-        mp.set_property_native(ud_key, ud_value)
-    end
-
-    return true, ud_key, ud_value, prev_val
-end
-
--- Sets a field of the user-data property.
 -- Appends `user-data/` to `key` and passes value through natively.
 local function set_value_native(key, ud_value)
     local ud_key = 'user-data/'..key
@@ -60,7 +38,27 @@ local function set_value_native(key, ud_value)
         mp.set_property_native(ud_key, ud_value)
     end
 
-    return true, ud_key, ud_value, prev_val
+    return true, {
+        key = ud_key,
+        value = ud_value,
+        prev_value = prev_val,
+    }
+end
+
+-- Sets a field of the user-data property.
+-- Appends `user-data/` to `key` and parses `value` as a json string.
+local function set_value(key, value)
+    local ud_value, err, trail = utils.parse_json(value, true)
+
+    if (err) then
+        msg.error(err)
+        msg.warn('failed to parse user-data JSON string:', value)
+        return false
+    end
+
+    local success, vars = set_value_native(key, ud_value)
+    if vars then vars.trail = trail end
+    return success, vars
 end
 
 -- loading the values from user-data.conf
@@ -120,14 +118,14 @@ local function main(_, opts)
     -- Finds any user-data value overrides in `script-opts`.
     for key, value in pairs(opts) do
         if string.find(key, '^user%-data/.') then
-            local succeeds, ud_key, ud_value, prev_value = set_value(string.match(key, '^user%-data/(.+)') or '', value)
+            local succeeds, vars = set_value(string.match(key, '^user%-data/(.+)') or '', value)
 
-            if succeeds then
-                current_overrides[ud_key] = true
+            if succeeds and vars then
+                current_overrides[vars.key] = true
 
-                if not overrides[ud_key] then
-                    overrides[ud_key] = true
-                    prev_values[ud_key] = prev_value
+                if not overrides[vars.key] then
+                    overrides[vars.key] = true
+                    prev_values[vars.key] = vars.prev_value
                 end
             end
         end
