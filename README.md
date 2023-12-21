@@ -102,8 +102,9 @@ If a `script-opt` is removed, then the associated `user-data` field is
 reset to the value it had when the first script-opt was applied.
 This behaviour can be changed with the [`restore` parameter](#restore).
 
-<!-- An option to use `profile-restore=copy-equal` behaviour may be added
-in the future. -->
+If, by some unfortunate coincidence, you are using a script that uses the
+`user-` prefix (or perhaps you just prefer underscores)
+you can substitute the `-` for a `_`, e.g. `user_data/path/to/field=<JSON value>`.
 
 ### script-opt parameters
 Parameters are a list of optional key-value pairs appended after the

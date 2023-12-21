@@ -154,8 +154,8 @@ local function main(_, script_opts)
 
     -- Finds any user-data value overrides in `script-opts`.
     for key, value in pairs(script_opts) do
-        if string.find(key, '^user%-data/.') then
-            local succeeds, vars = set_value(string.match(key, '^user%-data/(.+)') or '', value)
+        if string.find(key, '^user[_-]data/.') then
+            local succeeds, vars = set_value(string.match(key, '^user[_-]data/(.+)') or '', value)
 
             if succeeds and vars then
                 current_overrides[vars.key] = true
