@@ -159,19 +159,23 @@ script-opts-append=user-data/script2/text/header="header text"
 ```
 
 #### Conditional Auto Profiles
-Sets a `monitor-name` field depending on
-which monitor the mpv window is currently displayed on.
+Sets a `primary-monitor` field based on the
+monitor the mpv window is currently displayed on.
+The default value would be better placed in `user-data.conf`
+where the `restore=no` would not be necessary. It has been
+placed here to make the example easier to read.
 
 ```properties
-[DELL]
-profile-cond=display_names[1] == 'DP-1'
-profile-restore=copy
-script-opts-append=user-data/monitor-name="DELL Monitor"
+# sets the default value (probably better to do this is a config file)
+script-opts-append=user-data/primary-monitor=false|restore=no
 
-[OtherBrand]
+[PrimaryMonitor]
+profile-cond=display_names[1] == 'DP-1'
+script-opts-append=user-data/primary-monitor=true|restore=copy-equal
+
+[OtherMonitor]
 profile-cond=display_names[1] ~= 'DP-1'
-profile-restore=copy
-script-opts-append=user-data/monitor-name="Other Monitor"
+script-opts-remove=user-data/primary-monitor
 ```
 
 #### Commandline
