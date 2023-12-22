@@ -20,10 +20,36 @@ of `<key>=<value>`.
 `key` is the path to the `user-data` field that will be modified, e.g.
 `script_name/visibility`.
 `value` is the JSON formatted value that will be set to that field.
-The `/` and `=` characters are not supported in any of the field names for this
-config file, even though the `user-data` property does support those characters.
+The key cannot contain any `=` characters, however you can
+use [escaped character sequences](#escaped-character-sequences)
+to substitute them.
 
-Example:
+#### Escaped Character Sequences
+These are character sequences that can be included in the
+key to handle characters that cannot be typed directly.
+The `~0` sequence is only necessary to escape the other
+sequences, e.g., if you want the output to be `param~1` you
+would use `param~01`.
+
+The `~1` sequence is currently useless as `/` characters can
+be used directly. However, it is reserved for the future in case
+it becomes possible to include `/` characters in the name
+of a `user-data` field. This is technically allowed by `user-data`
+already, but is not supported when trying to access the property
+directly (`set`/`del` commands, property expansion, property observation, etc).
+
+sequence | output
+---------|-----------------------
+~0       | `~`
+~1       | `/`
+~2       | `\n` - newline
+~3       | `\r` - carriage return
+~4       | `=`
+
+These sequences are based and extended from RFC 6901.
+It is possible additional character sequences are added in the future
+
+#### `user-data.conf` example
 
 ```properties
 # comment
@@ -97,6 +123,7 @@ The script-opt is in the form `user-data/path/to/field=<JSON value><parameters>`
 It is nearly identical to the `user-data.conf` syntax, except that
 the keys must be prefixed with `user-data/` and a list of parameters can optionally
 be appended to the end (see [script-opt parameters](#script-opt-parameters)).
+Escaped character sequences are supported for the key.
 
 If a `script-opt` is removed, then the associated `user-data` field is
 reset to the value it had when the first script-opt was applied.

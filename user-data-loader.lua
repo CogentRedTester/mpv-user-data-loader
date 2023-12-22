@@ -69,6 +69,16 @@ local function set_value(key, value)
         return false
     end
 
+    -- substitute special characters
+    -- extended from RFC 6901
+    key = string.gsub(key, '~%d', {
+        ['~0'] = '~',
+        ['~1'] = '/',
+        ['~2'] = '\n',
+        ['~3'] = '\r',
+        ['~4'] = '=',
+    })
+
     local success, vars = set_value_native(key, ud_value)
     vars.trail = trail
     vars.opts = parse_value_opts(trail)
