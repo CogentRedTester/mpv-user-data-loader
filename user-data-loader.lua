@@ -85,31 +85,6 @@ local function set_value(key, value)
     return success, vars
 end
 
--- loading the values from user-data.conf
--- uses normal script-opts syntax
-local function setup_config()
-    local file = io.open(config_path, 'r')
-    if not file then
-        msg.debug('could not read', config_path)
-        return
-    end
-
-    msg.debug('reading values from', config_path)
-
-    for line in file:lines() do
-        if line ~= '' and string.sub(line, 1, 1) ~= '#' then
-            local key, value = string.match(line, '^([^=]+)=(.+)')
-            if not key or not value then
-                msg.error('invalid line in config file: "'..line..'"')
-            else
-                set_value(key, value)
-            end
-        end
-    end
-
-    file:close()
-end
-
 -- restores the user-data for the given key using the override parameters
 local function restore(key, override)
     msg.verbose('restoring', key)
@@ -133,30 +108,6 @@ local function restore(key, override)
     end
 end
 
--- loading values from user-data.json
--- uses JSON syntax
-local function setup_json()
-    local file = io.open(json_config_file, 'r')
-    if not file then
-        msg.debug('could not read', json_config_file)
-        return
-    end
-
-    msg.debug('reading values from', json_config_file)
-
-    local json, err = utils.parse_json(file:read("*a"))
-    if err then
-        msg.error(err, 'failed to parse JSON file', json_config_file)
-        msg.warn('check the syntax!')
-    elseif type(json) ~= 'table' then
-        msg.warn(json_config_file)
-        msg.error('json file must be a an object')
-    else
-        for key, value in pairs(json) do
-            set_value_native(key, value)
-        end
-    end
-end
 
 -- detects changes to the script-opts property that requires `user-data` updates
 local function main(_, script_opts)
@@ -185,6 +136,56 @@ local function main(_, script_opts)
         if not current_overrides[key] then
             restore(key, vars)
             overrides[key] = nil
+        end
+    end
+end
+
+-- loading the values from user-data.conf
+-- uses normal script-opts syntax
+local function setup_config()
+    local file = io.open(config_path, 'r')
+    if not file then
+        msg.debug('could not read', config_path)
+        return
+    end
+
+    msg.debug('reading values from', config_path)
+
+    for line in file:lines() do
+        if line ~= '' and string.sub(line, 1, 1) ~= '#' then
+            local key, value = string.match(line, '^([^=]+)=(.+)')
+            if not key or not value then
+                msg.error('invalid line in config file: "'..line..'"')
+            else
+                set_value(key, value)
+            end
+        end
+    end
+
+    file:close()
+end
+
+-- loading values from user-data.json
+-- uses JSON syntax
+local function setup_json()
+    local file = io.open(json_config_file, 'r')
+    if not file then
+        msg.debug('could not read', json_config_file)
+        return
+    end
+
+    msg.debug('reading values from', json_config_file)
+
+    local json, err = utils.parse_json(file:read("*a"))
+    if err then
+        msg.error(err, 'failed to parse JSON file', json_config_file)
+        msg.warn('check the syntax!')
+    elseif type(json) ~= 'table' then
+        msg.warn(json_config_file)
+        msg.error('json file must be a an object')
+    else
+        for key, value in pairs(json) do
+            set_value_native(key, value)
         end
     end
 end
