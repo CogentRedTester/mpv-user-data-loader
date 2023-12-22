@@ -179,6 +179,8 @@ local function setup_json()
     msg.debug('reading values from', json_config_file)
 
     local json, err = utils.parse_json(file:read("*a"))
+    file:close()
+
     if err then
         msg.error(err, 'failed to parse JSON file', json_config_file)
         msg.warn('check the syntax!')
