@@ -151,15 +151,17 @@ local function setup_config()
 
     msg.debug('reading values from', config_path)
 
+    local i = 1
     for line in file:lines() do
         if line ~= '' and string.sub(line, 1, 1) ~= '#' then
             local key, value = string.match(line, '^([^=]+)=(.+)')
             if not key or not value then
-                msg.error('invalid line in config file: "'..line..'"')
+                msg.error(('line %d invalid in %s: "%s"'):format(i, config_path, line))
             else
                 set_value(key, value)
             end
         end
+        i = i + 1
     end
 
     file:close()
