@@ -24,6 +24,30 @@ The key cannot contain any `=` characters, however you can
 use [escaped character sequences](#escaped-character-sequences)
 to substitute them.
 
+`user-data.conf` example:
+
+```properties
+# comment
+script_name/visibility=true
+script2/number-of-items=21
+script2/text/header="header text"
+```
+
+`user-data` output:
+```json
+{
+    "script_name": {
+        "visibility":true
+    },
+    "script2": {
+        "number-of-items": 21,
+        "text": {
+            "header": "header text"
+        }
+    }
+}
+```
+
 #### Escaped Character Sequences
 These are character sequences that can be included in the
 key to handle characters that cannot be typed directly.
@@ -48,30 +72,6 @@ sequence | output
 
 These sequences are based and extended from RFC 6901.
 It is possible additional character sequences are added in the future
-
-#### `user-data.conf` example
-
-```properties
-# comment
-script_name/visibility=true
-script2/number-of-items=21
-script2/text/header="header text"
-```
-
-`user-data` output:
-```json
-{
-    "script_name": {
-        "visibility":true
-    },
-    "script2": {
-        "number-of-items": 21,
-        "text": {
-            "header": "header text"
-        }
-    }
-}
-```
 
 ### JSON Config File
 `~~/script-opts/user-data.json`
