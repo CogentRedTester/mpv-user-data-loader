@@ -40,6 +40,18 @@ local function parse_value_opts(trail)
     return opts
 end
 
+-- substitute special characters
+-- extended from RFC 6901
+local function substitute_chars(str)
+    return string.gsub(str, '~%d', {
+        ['~0'] = '~',
+        ['~1'] = '/',
+        ['~2'] = '\n',
+        ['~3'] = '\r',
+        ['~4'] = '=',
+    })
+end
+
 -- Sets a field of the user-data property.
 -- Appends `user-data/` to `key` and passes value through natively.
 local function set_value_native(key, ud_value)
@@ -69,15 +81,7 @@ local function set_value(key, value)
         return false
     end
 
-    -- substitute special characters
-    -- extended from RFC 6901
-    key = string.gsub(key, '~%d', {
-        ['~0'] = '~',
-        ['~1'] = '/',
-        ['~2'] = '\n',
-        ['~3'] = '\r',
-        ['~4'] = '=',
-    })
+    key = substitute_chars(key)
 
     local success, vars = set_value_native(key, ud_value)
     vars.trail = trail
